@@ -9,5 +9,3 @@ if(!filename) {
 
 fs.watch(filename, () => console.log(`File ${filename} changed!`));
 console.log(`Now watching ${filename} for changes...`);
-
-
