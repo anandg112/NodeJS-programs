@@ -25,10 +25,32 @@ CreateSecurityGroup = (params) => {
     ec2.createSecurityGroup(params, (err, data) => {
         if(err)
             console.log(err);
-        else
+        else {
+            const SecurityGroupId = data.GroupId;
             console.log(data);
+            let paramsIngress = {
+                GroupId: SecurityGroupId,
+                IpPermissions:[
+                    {
+                        IpProtocol: "tcp",
+                        FromPort: 22,
+                        ToPort: 22,
+                        IpRanges: [{"CidrIp":"0.0.0.0/0"}]
+                    }
+                ]
+            };
+            ec2.authorizeSecurityGroupIngress(paramsIngress, (err, data) => {
+                if(err) {
+                    console.log("Error", err);
+                } else {
+                    console.log("Ingress successfully set", data);
+                }
+            });
+        }
     });
 }
+
+
 
 CreateKeyPair(paramName);
 CreateSecurityGroup(sgParams);
