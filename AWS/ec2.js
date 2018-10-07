@@ -1,62 +1,94 @@
 const AWS = require("aws-sdk");
 const ec2 = new AWS.EC2({apiVersion: '2016-11-15', region: 'us-east-1'});
 
+const sgName = 'anand-sg'; //The security group name
+const keyName = 'anand-key';
+
+let keyPairParams = {
+    KeyName: keyName //The key for the KeyPair key
+};
 let sgParams = {
     Description: "EC2 security group",
-    GroupName: "ec2-anand-sg",
+    GroupName: sgName,
     VpcId: process.env.VPC_ID
-}
-
-CreateSecurityGroup = (params) => {
-    ec2.createSecurityGroup(params, (err, data) => {
-        if(err)
-            console.log(err);
-        else {
-            const SecurityGroupId = data.GroupId;
-            console.log(data);
-            let paramsIngress = {
-                GroupId: SecurityGroupId,
-                IpPermissions:[
-                    {
-                        IpProtocol: "tcp",
-                        FromPort: 22,
-                        ToPort: 22,
-                        IpRanges: [{"CidrIp":"0.0.0.0/0"}]
-                    }
-                ]
-            };
-            let paramKey = {
-                KeyName: "anand-key"
-            };
-            ec2.createKeyPair(paramKey, (err, data) => {
-                if (err)
-                    console.log(err);
-                else
-                    console.log(data);
-            });
-            ec2.authorizeSecurityGroupIngress(paramsIngress, (err, data) => {
-                if(err) {
-                    console.log("Error", err);
-                } else {
-                    console.log("Ingress successfully set", data);
-                }
-            });
-        }
-    });
-}
-
-CreateSecurityGroup(sgParams);
-
+};
 
 // let ec2Params = {
 //     BlockDeviceMappings: [
 //         {
 //             DeviceName: "/dev/sdh",
 //             Ebs: {
-//                 VolumeSize: 
+//                 VolumeSize: 100
 //             }
 //         }
 //     ],
-//     ImageId: "ami-0ff8a91507f77f867"
+//     ImageId: process.env.AMI_ID,
+//     InstanceType: "t2.micro",
+//     KeyName: keyName,
+//     MaxCount: 1,
+//     MinCount: 1,
+//     SecurityGroupIds: [
+//         sgName
+//     ],
+//     SubnetId: "subnet-08677e34"
+// };
+
+const createKeyPair = (keyPairParams) => {
+    return new Promise((resolve, reject) => {
+        ec2.createKeyPair(keyPairParams, (err, data) => {
+            if (err)
+                reject(err);
+            else
+                resolve(data)
+        })
+    })
+};
+
+const createSecurityGroup = (sgParams) => {
+    return new Promise((resolve, reject) => {
+        ec2.createSecurityGroup(sgParams, (err, data) => {
+            if(err)
+                reject(err);
+            else {
+                    let paramsIngress = {
+                        GroupId: data.GroupId,
+                        IpPermissions: [
+                            {
+                                IpProtocol: "tcp",
+                                FromPort: 22,
+                                ToPort: 22,
+                                IpRanges: [{ "CidrIp": "0.0.0.0/0" }]
+                            }
+                        ]
+                    };
+                    ec2.authorizeSecurityGroupIngress(paramsIngress, (err, data) => {
+                        if (err)
+                            reject(err);
+                        else
+                            resolve(data);
+                    });
+                }
+        })
+    })
+};
+
+async function executeParallelAsyncTasks() {
+    try {
+        await Promise.all([createKeyPair(keyPairParams), createSecurityGroup(sgParams)])
+    } catch(err) {
+        console.log(err);
+    }   
+}
+
+executeParallelAsyncTasks();
+
+// const EC2RunInstance = (params) => {
+//     ec2.runInstances(params, (err, data) => {
+//         if (err)
+//             console.log(err);
+//         else
+//             console.log(data);
+//         });
 // }
+
 
