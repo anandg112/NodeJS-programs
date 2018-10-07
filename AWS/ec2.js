@@ -1,20 +1,6 @@
 const AWS = require("aws-sdk");
 const ec2 = new AWS.EC2({apiVersion: '2016-11-15', region: 'us-east-1'});
 
-
-let paramName = {
-    KeyName: "anand-key"
-};
-
-CreateKeyPair = (params) => {
-    ec2.createKeyPair(params, (err,data) => {
-        if(err) 
-            console.log(err);
-        else
-            console.log(data);
-    });
-}
-
 let sgParams = {
     Description: "EC2 security group",
     GroupName: "ec2-anand-sg",
@@ -39,6 +25,15 @@ CreateSecurityGroup = (params) => {
                     }
                 ]
             };
+            let paramKey = {
+                KeyName: "anand-key"
+            };
+            ec2.createKeyPair(paramKey, (err, data) => {
+                if (err)
+                    console.log(err);
+                else
+                    console.log(data);
+            });
             ec2.authorizeSecurityGroupIngress(paramsIngress, (err, data) => {
                 if(err) {
                     console.log("Error", err);
@@ -50,9 +45,6 @@ CreateSecurityGroup = (params) => {
     });
 }
 
-
-
-CreateKeyPair(paramName);
 CreateSecurityGroup(sgParams);
 
 
