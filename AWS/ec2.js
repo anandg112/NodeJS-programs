@@ -13,25 +13,24 @@ let sgParams = {
     VpcId: process.env.VPC_ID
 };
 
-// let ec2Params = {
-//     BlockDeviceMappings: [
-//         {
-//             DeviceName: "/dev/sdh",
-//             Ebs: {
-//                 VolumeSize: 100
-//             }
-//         }
-//     ],
-//     ImageId: process.env.AMI_ID,
-//     InstanceType: "t2.micro",
-//     KeyName: keyName,
-//     MaxCount: 1,
-//     MinCount: 1,
-//     SecurityGroupIds: [
-//         sgName
-//     ],
-//     SubnetId: "subnet-08677e34"
-// };
+let ec2Params = {
+    BlockDeviceMappings: [
+        {
+            DeviceName: "/dev/sdh",
+            Ebs: {
+                VolumeSize: 100
+            }
+        }
+    ],
+    ImageId: "ami-0ff8a91507f77f867",
+    InstanceType: "t2.micro",
+    KeyName: keyName,
+    MaxCount: 1,
+    MinCount: 1,
+    SecurityGroups: [
+        sgName
+    ],
+};
 
 const createKeyPair = (keyPairParams) => {
     return new Promise((resolve, reject) => {
@@ -72,23 +71,27 @@ const createSecurityGroup = (sgParams) => {
     })
 };
 
+const runInstances = (ec2Params) => {
+    return new Promise((resolve, reject) => {
+        ec2.runInstances(ec2Params, (err, data) => {
+            if (err)
+                reject(err);
+            else
+                resolve(data);
+        })
+    })
+};
+
 async function executeParallelAsyncTasks() {
     try {
-        await Promise.all([createKeyPair(keyPairParams), createSecurityGroup(sgParams)])
+        await Promise.all([createKeyPair(keyPairParams), createSecurityGroup(sgParams), runInstances(ec2Params)])
     } catch(err) {
         console.log(err);
     }   
-}
+};
 
 executeParallelAsyncTasks();
 
-// const EC2RunInstance = (params) => {
-//     ec2.runInstances(params, (err, data) => {
-//         if (err)
-//             console.log(err);
-//         else
-//             console.log(data);
-//         });
-// }
+
 
 
